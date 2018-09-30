@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <canvas id="webgl" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('webgl')
+    const gl = canvas.getContext('webgl')
+
+    const VSHADER_SOURCE = `
+      attribute vec4 a_Position;
+      attribute vec4 u_Translation;
+      void main() {
+        gl_Position = a_Position + u_Translation;
+      }
+    `
+
+    const FSHADER_SOURCE = `
+      void main() {
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+      }
+    `
+
+    const vshader = gl.createShader(gl.VERTEX_SHADER)
+    gl.shaderSource(vshader, VSHADER_SOURCE)
+    gl.compileShader(vshader)
+
+    const fshader = gl.createShader(gl.FRAGMENT_SHADER)
+    gl.shaderSource(fshader, FSHADER_SOURCE)
+    gl.compileShader(fshader)
+
+    const program = gl.createProgram()
+    gl.attachShader(program, vshader)
+    gl.attachShader(program, fshader)
+    gl.linkProgram(program)
+    gl.useProgram(program)
+
+    const a_Position = gl.getAttribLocation(program, 'a_Position')
+    const u_Translation = gl.getAttribLocation(program, 'u_Translation')
+
+    const vertices = new Float32Array([0, 0.5, -0.5, -0.5, 0.5, -0.5])
+    const vertexBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 8, 0)
+    gl.enableVertexAttribArray(a_Position)
+
+    gl.vertexAttrib4f(u_Translation, 0.5, 0.5, 0.0, 0.0)
+
+    gl.clearColor(0.0, 0.0, 1.0, 1.0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    gl.drawArrays(gl.TRIANGLES, 0, 3)
+  </script>
+</body>
+</html>

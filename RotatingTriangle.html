@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+  <script src="./lib/cuon-matrix.js"></script>
+</head>
+<body>
+  <canvas id="webgl" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('webgl')
+    const gl = canvas.getContext('webgl')
+
+    const VSHADER_SOURCE = `
+      attribute vec4 a_Position;
+      uniform mat4 u_ModelMatrix;
+      void main() {
+        gl_Position = u_ModelMatrix * a_Position;
+      }
+    `
+
+    const FSHADER_SOURCE = `
+      void main() {
+        gl_FragColor = vec4(1, 0, 0, 1);
+      }
+    `
+
+    const vshader = gl.createShader(gl.VERTEX_SHADER)
+    gl.shaderSource(vshader, VSHADER_SOURCE)
+    gl.compileShader(vshader)
+
+    const fshader = gl.createShader(gl.FRAGMENT_SHADER)
+    gl.shaderSource(fshader, FSHADER_SOURCE)
+    gl.compileShader(fshader)
+
+    const program = gl.createProgram()
+    gl.attachShader(program, vshader)
+    gl.attachShader(program, fshader)
+    gl.linkProgram(program)
+    gl.useProgram(program)
+    gl.clearColor(0, 0, 1, 1)
+
+    const a_Position = gl.getAttribLocation(program, 'a_Position')
+    const vertices = new Float32Array([0, 0.5, -0.5, -0.5, 0.5, -0.5])
+    const vertexBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(a_Position)
+
+    const u_ModelMatrix = gl.getUniformLocation(program, 'u_ModelMatrix')
+    const modelMatrix = new Matrix4()
+
+    const last = Date.now()
+    function animate() {
+      const elapsed = Date.now() - last
+      const angle = elapsed / 1000 * 90
+
+      modelMatrix.setTranslate(0.35, 0, 0)
+      modelMatrix.rotate(angle, 0, 0, 1)
+      gl.uniformMatrix4fv(u_ModelMatrix, false, modelMatrix.elements)
+      gl.clear(gl.COLOR_BUFFER_BIT)
+      gl.drawArrays(gl.TRIANGLES, 0, 3)
+
+      requestAnimationFrame(animate)
+    }
+
+    animate()
+  </script>
+</body>
+</html>

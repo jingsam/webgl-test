@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <canvas id="webgl" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('webgl')
+    const gl = canvas.getContext('webgl')
+
+    const VSHADER_SOURCE = `
+      attribute vec4 a_Position;
+      void main() {
+        gl_Position = a_Position;
+        gl_PointSize = 5.0;
+      }
+    `
+
+    const FSHADER_SOURCE = `
+      void main() {
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+      }
+    `
+
+    const vshader = gl.createShader(gl.VERTEX_SHADER)
+    gl.shaderSource(vshader, VSHADER_SOURCE)
+    gl.compileShader(vshader)
+
+    const fshader = gl.createShader(gl.FRAGMENT_SHADER)
+    gl.shaderSource(fshader, FSHADER_SOURCE)
+    gl.compileShader(fshader)
+
+    const program = gl.createProgram()
+    gl.attachShader(program, vshader)
+    gl.attachShader(program, fshader)
+    gl.linkProgram(program)
+    gl.useProgram(program)
+
+    const a_Position = gl.getAttribLocation(program, 'a_Position')
+
+    gl.clearColor(0.0, 0.0, 1.0, 1.0)
+    gl.clear(gl.COLOR_BUFFER_BIT)
+
+    const points = []
+
+    canvas.addEventListener('mousemove', e => {
+      const { clientX, clientY } = e
+      const rect = e.target.getBoundingClientRect()
+
+      const x = ((clientX - rect.left) - canvas.width / 2) / (canvas.width / 2)
+      const y = (canvas.height / 2 - (clientY - rect.top)) / (canvas.height / 2)
+
+      points.push([x, y])
+
+      gl.clear(gl.COLOR_BUFFER_BIT)
+
+      points.forEach(point => {
+        gl.vertexAttrib3f(a_Position, point[0], point[1], 0.0)
+        gl.drawArrays(gl.POINTS, 0, 1)
+      })
+    })
+  </script>
+</body>
+</html>

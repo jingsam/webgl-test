@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <canvas id="webgl" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('webgl')
+    const gl = canvas.getContext('webgl')
+
+    const VSHADER_SOURCE = `
+      attribute vec4 a_Position;
+      attribute vec2 a_TexCoords;
+      varying vec2 v_TexCoords;
+      void main() {
+        gl_Position = a_Position;
+        v_TexCoords = a_TexCoords;
+      }
+    `
+
+    const FSHADER_SOURCE = `
+      precision mediump float;
+      varying vec2 v_TexCoords;
+      uniform sampler2D u_Sampler0;
+      uniform sampler2D u_Sampler1;
+      void main() {
+        vec4 color0 = texture2D(u_Sampler0, v_TexCoords);
+        vec4 color1 = texture2D(u_Sampler1, v_TexCoords);
+        gl_FragColor = color0 * color1;
+      }
+    `
+
+    const vshader = gl.createShader(gl.VERTEX_SHADER)
+    gl.shaderSource(vshader, VSHADER_SOURCE)
+    gl.compileShader(vshader)
+
+    const fshader = gl.createShader(gl.FRAGMENT_SHADER)
+    gl.shaderSource(fshader, FSHADER_SOURCE)
+    gl.compileShader(fshader)
+
+    const program = gl.createProgram()
+    gl.attachShader(program, vshader)
+    gl.attachShader(program, fshader)
+    gl.linkProgram(program)
+    gl.useProgram(program)
+    gl.clearColor(0, 0, 0, 1)
+
+    const verticesTexCoords = new Float32Array([
+      -0.5,  0.5, 0, 1,
+      -0.5, -0.5, 0, 0,
+       0.5, -0.5, 1, 0,
+       0.5,  0.5, 1, 1
+    ])
+    const vertexTexCoordBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexTexCoordBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, verticesTexCoords, gl.STATIC_DRAW)
+
+    const FSIZE = verticesTexCoords.BYTES_PER_ELEMENT
+
+    const a_Position = gl.getAttribLocation(program, 'a_Position')
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, FSIZE * 4, 0)
+    gl.enableVertexAttribArray(a_Position)
+
+    const a_TexCoords = gl.getAttribLocation(program, 'a_TexCoords')
+    gl.vertexAttribPointer(a_TexCoords, 2, gl.FLOAT, false, FSIZE * 4, FSIZE * 2)
+    gl.enableVertexAttribArray(a_TexCoords)
+
+    const u_Sampler0 = gl.getUniformLocation(program, 'u_Sampler0')
+    gl.uniform1i(u_Sampler0, 0)
+
+    const u_Sampler1 = gl.getUniformLocation(program, 'u_Sampler1')
+    gl.uniform1i(u_Sampler1, 1)
+
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, 1)
+
+    let image0Loaded = false
+    let image1Loaded = false
+
+    const image0 = new Image()
+    image0.onload = () => {
+      const texture0 = gl.createTexture()
+      gl.activeTexture(gl.TEXTURE0)
+      gl.bindTexture(gl.TEXTURE_2D, texture0)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image0)
+
+      image0Loaded = true
+      if (image0Loaded && image1Loaded) {
+        gl.clear(gl.COLOR_BUFFER_BIT)
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, 4)
+      }
+    }
+    image0.src = './resources/sky.jpg'
+
+    const image1 = new Image()
+    image1.onload = () => {
+      const texture1 = gl.createTexture()
+      gl.activeTexture(gl.TEXTURE1)
+      gl.bindTexture(gl.TEXTURE_2D, texture1)
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGB, gl.RGB, gl.UNSIGNED_BYTE, image1)
+
+      image1Loaded = true
+      if (image0Loaded && image1Loaded) {
+        gl.clear(gl.COLOR_BUFFER_BIT)
+        gl.drawArrays(gl.TRIANGLE_FAN, 0, 4)
+      }
+    }
+    image1.src = './resources/circle.gif'
+  </script>
+</body>
+</html>

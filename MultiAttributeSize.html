@@ -1,0 +1,66 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <canvas id="webgl" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('webgl')
+    const gl = canvas.getContext('webgl')
+
+    const VSHADER_SOURCE = `
+      attribute vec4 a_Position;
+      attribute float a_PointSize;
+      void main() {
+        gl_Position = a_Position;
+        gl_PointSize = a_PointSize;
+      }
+    `
+
+    const FSHADER_SOURCE = `
+      void main() {
+        gl_FragColor = vec4(1, 0, 0, 1);
+      }
+    `
+
+    const vshader = gl.createShader(gl.VERTEX_SHADER)
+    gl.shaderSource(vshader, VSHADER_SOURCE)
+    gl.compileShader(vshader)
+
+    const fshader = gl.createShader(gl.FRAGMENT_SHADER)
+    gl.shaderSource(fshader, FSHADER_SOURCE)
+    gl.compileShader(fshader)
+
+    const program = gl.createProgram()
+    gl.attachShader(program, vshader)
+    gl.attachShader(program, fshader)
+    gl.linkProgram(program)
+    gl.useProgram(program)
+    gl.clearColor(0, 0, 1, 1)
+
+    const a_Position = gl.getAttribLocation(program, 'a_Position')
+    gl.enableVertexAttribArray(a_Position)
+    const vertices = new Float32Array([0, 0.5, -0.5, -0.5, 0.5, -0.5])
+    const vertexBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0)
+
+
+    const a_PointSize = gl.getAttribLocation(program, 'a_PointSize')
+    const sizes = new Float32Array([10, 20, 30])
+    const sizeBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, sizeBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, sizes, gl.STATIC_DRAW)
+    gl.vertexAttribPointer(a_PointSize, 1, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(a_PointSize)
+
+    gl.clear(gl.COLOR_BUFFER_BIT)
+    gl.drawArrays(gl.POINTS, 0, 3)
+  </script>
+
+</body>
+</html>

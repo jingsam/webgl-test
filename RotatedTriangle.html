@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title></title>
+</head>
+<body>
+  <canvas id="webgl" width="400" height="400"></canvas>
+
+  <script>
+    const canvas = document.getElementById('webgl')
+    const gl = canvas.getContext('webgl')
+
+    const VSHADER_SOURCE = `
+      attribute vec4 a_Position;
+      uniform float u_CosB, u_SinB;
+      void main() {
+        gl_Position.x = a_Position.x * u_CosB - a_Position.y * u_SinB;
+        gl_Position.y = a_Position.x * u_SinB + a_Position.y * u_CosB;
+        gl_Position.z = a_Position.z;
+        gl_Position.w = 1.0;
+      }
+    `
+
+    const FSHADER_SOURCE = `
+      void main() {
+        gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+      }
+    `
+
+    const vshader = gl.createShader(gl.VERTEX_SHADER)
+    gl.shaderSource(vshader, VSHADER_SOURCE)
+    gl.compileShader(vshader)
+
+    const fshader = gl.createShader(gl.FRAGMENT_SHADER)
+    gl.shaderSource(fshader, FSHADER_SOURCE)
+    gl.compileShader(fshader)
+
+    const program = gl.createProgram()
+    gl.attachShader(program, vshader)
+    gl.attachShader(program, fshader)
+    gl.linkProgram(program)
+    gl.useProgram(program)
+
+    gl.clearColor(0.0, 0.0, 1.0, 1.0)
+
+    const a_Position = gl.getAttribLocation(program, 'a_Position')
+    const u_SinB = gl.getUniformLocation(program, 'u_SinB')
+    const u_CosB = gl.getUniformLocation(program, 'u_CosB')
+
+    const vertices = new Float32Array([0.0, 0.5, -0.5, -0.5, 0.5, -0.5])
+    // const ANGLE = 0.0
+    // const SinB = Math.sin(Math.PI / 180.0 * ANGLE)
+    // const CosB = Math.cos(Math.PI / 180.0 * ANGLE)
+
+    const vertexBuffer = gl.createBuffer()
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer)
+    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW)
+    gl.vertexAttribPointer(a_Position, 2, gl.FLOAT, false, 0, 0)
+    gl.enableVertexAttribArray(a_Position)
+
+    // gl.uniform1f(u_SinB, SinB)
+    // gl.uniform1f(u_CosB, CosB)
+
+    // gl.clear(gl.COLOR_BUFFER_BIT)
+    // gl.drawArrays(gl.TRIANGLES, 0, 3)
+
+    let last = Date.now()
+    function step() {
+      const now = Date.now()
+      const elapsed = now - last
+      const ANGLE = elapsed * (360.0 / 10000.0)
+      const SinB = Math.sin(Math.PI / 180.0 * ANGLE)
+      const CosB = Math.cos(Math.PI / 180.0 * ANGLE)
+
+      gl.uniform1f(u_SinB, SinB)
+      gl.uniform1f(u_CosB, CosB)
+
+      gl.clear(gl.COLOR_BUFFER_BIT)
+      gl.drawArrays(gl.TRIANGLES, 0, 3)
+
+      requestAnimationFrame(step)
+    }
+
+    step()
+  </script>
+</body>
+</html>
